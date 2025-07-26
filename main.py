@@ -8,9 +8,6 @@ import math
 #status of 1 from stitcher means there wasn't enough overlap
 #ideas: make stitcher
 
-def findCir(x, y):
-    r = math.sqrt(x**2 + y**2)
-    return r #currently only returns hypotenuse
     
 
 def main():
