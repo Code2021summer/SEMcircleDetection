@@ -11,8 +11,7 @@ import math
     
 
 def main():
-    x = float(input("Enter the first coordinate: "))
-    y = float(input("Enter the second coord: "))
+    pass
 
 
 if __name__ == '__main__':
