@@ -344,28 +344,9 @@ def findRoughContour(img, is_test=False):
         cv.destroyAllWindows()
 
     height, width = greyscale_img.shape
-    threshold = 50 #amount of non-black pixels allowed in a row, any more and the program will not consider it a black line
-    first_line_passed = False
-    cutoff = 0
-
-    for y in range(height-1, -1, -1):
-        row = greyscale_img[y,:]
-        if cv.countNonZero(row) < threshold:
-            if not first_line_passed:
-                first_line_passed = True
-                if is_test:
-                    print(y)
-            elif first_line_passed:
-                cutoff = y
-                if is_test:
-                    print(y)
-                break
-    
-    cropped_img = greyscale_img[:-(height - cutoff), :]
-    
 
     threshold = 90
-    ret, binary_img = cv.threshold(cropped_img, threshold, 255, cv.THRESH_BINARY)
+    ret, binary_img = cv.threshold(greyscale_img, threshold, 255, cv.THRESH_BINARY)
 
     if is_test:
         cv.imshow(f"Here is the Binary Image with theshold {threshold}", binary_img)
@@ -499,24 +480,26 @@ def findUseableContours(img, working_contour, is_test=False):
 def findScale(img, height, width, is_test=False):
     threshold = 50 #amount of non-black pixels allowed in a row, any more and the program will not consider it a black line
     first_line_passed = False
-    top_of_key = 0
-    bottom_of_key = 0
+    top_of_key = int(height*.9)
+    scale_bar_location = int(width - (width*0.40))
+    # bottom_of_key = 0
 
-    for y in range(height-1, -1, -1):
-        row = img[y,:]
-        if cv.countNonZero(row) < threshold:
-            if not first_line_passed:
-                first_line_passed = True
-                bottom_of_key = y
-                if is_test:
-                    print(y)
-            elif first_line_passed:
-                top_of_key = y
-                if is_test:
-                    print(y)
-                break
+    # for y in range(height-1, -1, -1):
+    #     row = img[y,:]
+    #     if cv.countNonZero(row) < threshold:
+    #         if not first_line_passed:
+    #             first_line_passed = True
+    #             bottom_of_key = y
+    #             if is_test:
+    #                 print(y)
+    #         elif first_line_passed:
+    #             top_of_key = y
+    #             if is_test:
+    #                 print(y)
+    #             break
     
-    key_img = img[top_of_key:bottom_of_key, 0:int(width*0.25)]
+    key_img = img[top_of_key:height, scale_bar_location:width]
+    #[top_of_key:bottom_of_key, 0:int(width*0.25)]
     if len(key_img.shape) == 3:
         greyscale_keyimg = cv.cvtColor(key_img, cv.COLOR_BGR2GRAY)
     else: 
@@ -527,7 +510,7 @@ def findScale(img, height, width, is_test=False):
         cv.waitKey(0)
         cv.destroyAllWindows()
 
-    threshold = 90
+    threshold = 250
     ret, binary_key = cv.threshold(greyscale_keyimg, threshold, 255, cv.THRESH_BINARY)
 
     if is_test:
@@ -576,8 +559,8 @@ def findScale(img, height, width, is_test=False):
     #     else:
     #         print("Too many contours to display")
     
-    indexOfBorder = max(range(len(potential_contours)), key=lambda i: cv.contourArea(potential_contours[i]))
-    del potential_contours[indexOfBorder]
+    # scaleBar = max(range(len(potential_contours)), key=lambda i: cv.contourArea(potential_contours[i]))
+    # del potential_contours[indexOfBorder]
     scaleBar = max(potential_contours, key=cv.contourArea)
 
     if is_test:
@@ -651,12 +634,14 @@ def findScale(img, height, width, is_test=False):
     unit = "".join(preunit)
     if unit == "μm":
         is_in_microns = True
+    if unit == "mm":
+        is_in_microns = False
     
-    if is_in_microns:
-        scale = Fraction(value, lengthOfScaleBar) #typecast as float when necessary
+    scale = Fraction(value, lengthOfScaleBar) #typecast as float when necessary
+    scale = scale / 1000 if is_in_microns else scale
     if is_test:
-        print(f"There are {float(scale)} microns per pixel")
-    scale = scale / 1000
+        print(f"There are {float(scale)}mm per pixel")
+    
 
     return scale
 
@@ -664,7 +649,7 @@ def findRepPoints(img, is_test=False):
     height, width = img.shape[:2]
     pixel_center_x = width // 2
     pixel_center_y = height // 2
-    scale = findScale(img, height, width, is_test) #scale is in millimeters per pixel
+    scale = findScale(img, height, width, is_test=True) #scale is in millimeters per pixel
 
     potentialContours = findRoughContour(img, is_test)
     working_contour = findUseableContours(img, potentialContours, is_test)
@@ -742,7 +727,7 @@ def createRecipeFile(mov, current_itr, targetDir="RecFiles", is_test=False):
 #need to covert pixel coords into real coords using real coords and magnification 
 
 #img = cv.imread("SEMImgTest/4.tif", cv.IMREAD_GRAYSCALE)
-img = cv.imread("SEMImgTest/1.tif")
+img = cv.imread("SEMImgTest/testReal.bmp")
 coords_of_center = (30, 20)
 numberOfPointsRequested = 6
 rep_points, scale = findRepPoints(img)
