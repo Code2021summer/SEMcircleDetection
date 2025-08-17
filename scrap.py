@@ -6,7 +6,7 @@ import sympy as sp
 import math
 import cv2 as cv
 import numpy as np
-from PIL import Image
+#from PIL import Image
 import pytesseract
 from fractions import Fraction
 
@@ -649,7 +649,7 @@ def findRepPoints(img, is_test=False):
     height, width = img.shape[:2]
     pixel_center_x = width // 2
     pixel_center_y = height // 2
-    scale = findScale(img, height, width, is_test=True) #scale is in millimeters per pixel
+    scale = findScale(img, height, width, is_test) #scale is in millimeters per pixel
 
     potentialContours = findRoughContour(img, is_test)
     working_contour = findUseableContours(img, potentialContours, is_test)
@@ -727,29 +727,26 @@ def createRecipeFile(mov, current_itr, targetDir="RecFiles", is_test=False):
 #need to covert pixel coords into real coords using real coords and magnification 
 
 #img = cv.imread("SEMImgTest/4.tif", cv.IMREAD_GRAYSCALE)
-img = cv.imread("SEMImgTest/testReal.bmp")
-coords_of_center = (30, 20)
-numberOfPointsRequested = 6
-rep_points, scale = findRepPoints(img)
-constants = solveCircle(rep_points)
-pixel_points_of_circle = createCircle(constants, numberOfPointsRequested) #stored in lists of 2 all contained within a larger list
-real_points = []
-for coordPair in pixel_points_of_circle:
-    real_coord = convertPixelToReal(coordPair, scale)
-    real_points.append(real_coord)
-distanceToMove = []
-for point in real_points:
-    distanceToMove.append(findDistanceFromStart(point, coords_of_center))
+def main():
+    img = cv.imread("SEMImgTest/testReal.bmp")
+    coords_of_center = (30, 20)
+    numberOfPointsRequested = 6
+    rep_points, scale = findRepPoints(img, is_test=True)
+    constants = solveCircle(rep_points)
+    pixel_points_of_circle = createCircle(constants, numberOfPointsRequested) #stored in lists of 2 all contained within a larger list
+    real_points = []
+    for coordPair in pixel_points_of_circle:
+        real_coord = convertPixelToReal(coordPair, scale)
+        real_points.append(real_coord)
+    distanceToMove = []
+    for point in real_points:
+        distanceToMove.append(findDistanceFromStart(point, coords_of_center))
 
-for i in range(len(distanceToMove)):
-    createRecipeFile(distanceToMove[i], i)
+    for i in range(len(distanceToMove)):
+        createRecipeFile(distanceToMove[i], i)
 
-
-
-
-#img = Image.open("SquigglesFull.jpg")
-#img.show()
-#affine based model can be used for specialized devices
+if __name__ == "__main__":
+    main()
 
 
 #can request machine to send a screenshot, magnification, xy state ---> THESE ARE THE INPUT
