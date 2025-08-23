@@ -656,10 +656,19 @@ def findRepPoints(img, is_test=False):
     return (trimContourAndReturnPoints(img, working_contour, is_test), scale)
     #add function that converts pixel points into real points
 
-def convertPixelToReal(points, scale, is_test=False):
+def convertPixelToReal(points, scale, center_coords, is_test=False):
     convertedPoints = []
+    if is_test:
+        print(points)
+    x, y = center_coords
+    pointIdx = 0
     for point in points:
         convertedPoint = point * float(scale)
+        if pointIdx == 0:
+            convertedPoint = convertedPoint + x
+            pointIdx += 1
+        else:
+            convertedPoint = convertedPoint - y
         convertedPoints.append(convertedPoint)
     return convertedPoints
 
@@ -728,22 +737,19 @@ def createRecipeFile(mov, current_itr, targetDir="RecFiles", is_test=False):
 
 #img = cv.imread("SEMImgTest/4.tif", cv.IMREAD_GRAYSCALE)
 def main():
-    img = cv.imread("SEMImgTest/testReal.bmp")
-    coords_of_center = (30, 20)
-    numberOfPointsRequested = 6
-    rep_points, scale = findRepPoints(img, is_test=True)
+    img = cv.imread("SEMImgTest/testReal.bmp") #can be changed to image of your choice
+    coords_of_center = (30, 20) #adjust as needed
+    numberOfPointsRequested = 6 #adjust as needed
+    
+    rep_points, scale = findRepPoints(img)
     constants = solveCircle(rep_points)
-    pixel_points_of_circle = createCircle(constants, numberOfPointsRequested) #stored in lists of 2 all contained within a larger list
+    pixel_points_of_circle = createCircle(constants, numberOfPointsRequested)
     real_points = []
     for coordPair in pixel_points_of_circle:
-        real_coord = convertPixelToReal(coordPair, scale)
+        real_coord = convertPixelToReal(coordPair, scale, coords_of_center, is_test=True)
         real_points.append(real_coord)
-    distanceToMove = []
-    for point in real_points:
-        distanceToMove.append(findDistanceFromStart(point, coords_of_center))
-
-    for i in range(len(distanceToMove)):
-        createRecipeFile(distanceToMove[i], i)
+    for i in range(len(real_points)):
+        createRecipeFile(real_points[i], i)
 
 if __name__ == "__main__":
     main()

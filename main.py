@@ -10,10 +10,11 @@ def main():
     pixel_points_of_circle = createCircle(constants, numberOfPointsRequested)
     real_points = []
     for coordPair in pixel_points_of_circle:
-        real_coord = convertPixelToReal(coordPair, scale)
+        real_coord = convertPixelToReal(coordPair, scale, coords_of_center)
         real_points.append(real_coord)
     for i in range(len(real_points)):
         createRecipeFile(real_points[i], i)
+
 
 
 if __name__ == '__main__':
