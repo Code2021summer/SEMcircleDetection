@@ -3,7 +3,6 @@
 #this file is meant for testing the functions
 
 import sympy as sp
-import math
 import cv2 as cv
 import numpy as np
 #from PIL import Image
